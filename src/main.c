@@ -14,7 +14,8 @@
 #include <ctype.h>
 #ifndef __LIBRETRO__
 #include <GL/glut.h>
-#include <GL/glext.h>
+#include "GL/glext.h"
+#include "nfd.h"
 #endif
 #include <time.h>
 #include <math.h>
@@ -197,6 +198,39 @@ int main(int argc, char** argv)
 #endif
 	if(argc >= 2)
 		nesEmuFileOpen(argv[1]);
+	else {
+		NFD_Init();
+
+		nfdchar_t* outPath;
+
+		// prepare filters for the dialog
+#if ZIPSUPPORT
+		nfdfilteritem_t filterItem[2] = {{"NES ROM", "nes,nsf,fds,qd"}, {"Zip ROM", "zip"}};
+		// show the dialog
+		nfdresult_t result = NFD_OpenDialog(&outPath, filterItem, 2, NULL);
+#else
+		nfdfilteritem_t filterItem[1] = {{"NES ROM", "nes,nsf,fds,qd"}};
+		// show the dialog
+		nfdresult_t result = NFD_OpenDialog(&outPath, filterItem, 1, NULL);
+#endif
+		if (result == NFD_OKAY) {
+			puts("Success!");
+			puts(outPath);
+			nesEmuFileOpen(outPath);
+			// remember to free the memory (since NFD_OKAY is returned)
+			NFD_FreePath(outPath);
+		} else if (result == NFD_CANCEL) {
+			puts("User pressed cancel.");
+		} else {
+			printf("Error: %s\n", NFD_GetError());
+		}
+
+		// Quit NFD
+		NFD_Quit();
+
+		if (result != NFD_OKAY)
+			return -1;
+	}
 	if(emuFileType == FTYPE_NES)
 	{
 		if(!nesEmuFileRead())

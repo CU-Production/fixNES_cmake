@@ -14,4 +14,6 @@
 #define FIXNES_ALWAYSINLINE
 #endif
 
+#include <stdint.h>
+
 #endif
