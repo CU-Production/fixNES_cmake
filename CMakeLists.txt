@@ -32,6 +32,14 @@ FetchContent_Declare(nfd
 set(LIBTYPE "STATIC")
 FetchContent_MakeAvailable(nfd)
 
+FetchContent_Declare(zlib
+        GIT_REPOSITORY https://github.com/madler/zlib
+        GIT_TAG v1.3.1
+        GIT_PROGRESS TRUE
+        GIT_SHALLOW TRUE
+)
+FetchContent_MakeAvailable(zlib)
+
 find_package(OpenGL REQUIRED)
 
 file(GLOB MAPPER_SRCS src/mapper/*.c)
@@ -56,14 +64,13 @@ add_executable(fixNES
         src/fm2play.c
         src/vrc_irq.c
         ${MAPPER_SRCS}
+        src/unzip/ioapi_mem.c
+        src/unzip/unzip.c
 )
-target_compile_definitions(fixNES PRIVATE FREEGLUT_STATIC DO_INLINE_ATTRIBS=0)
+target_compile_definitions(fixNES PRIVATE FREEGLUT_STATIC ZIPSUPPORT DO_INLINE_ATTRIBS=0)
 if (WIN32)
     target_compile_definitions(fixNES PRIVATE WINDOWS_BUILD)
     target_include_directories(fixNES PRIVATE ${freeglut_SOURCE_DIR}/include)
-elseif (UNIX)
-    target_compile_definitions(fixNES PRIVATE ZIPSUPPORT)
-    target_sources(fixNES src/unzip/ioapi_mem.c src/unzip/unzip.c)
 endif (WIN32)
-target_link_libraries(fixNES PRIVATE freeglut_static OpenAL OpenGL::GL OpenGL::GLU nfd::nfd)
+target_link_libraries(fixNES PRIVATE freeglut_static OpenAL OpenGL::GL OpenGL::GLU nfd::nfd zlibstatic)
 
